@@ -15,18 +15,20 @@ class RegisterController extends Controller
 {
     public function register(RegisterUser $request)
     {
-        $validatedData = $request->validated();
-
         $user = User::create([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'api_token' => Hash::make(Str::random(100)),
-            'password' => Hash::make($validatedData['password']),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
         ]);
+
+        $token = auth()->guard('api')->login($user);
 
         return response([
             'message' => 'ثبت نام با موفقیت انجام شد.',
-            'data' => new UserResource($user),
+            'data' => [
+                'token' => $token,
+                'token_type' => 'Bearer',
+            ],
             'status' => Response::HTTP_OK
         ], Response::HTTP_OK);
 

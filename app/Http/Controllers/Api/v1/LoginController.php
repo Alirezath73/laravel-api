@@ -16,43 +16,20 @@ class LoginController extends Controller
 {
     public function login(LoginUser $request)
     {
-        $validateData = $request->validated();
-
-        $user = User::where('email', $validateData['email'])->first();
-        if (Hash::check($validateData['password'], $user->password)) {
-            $user->update([
-                'api_token' => Hash::make(Str::random(100)),
-            ]);
-            return response([
-                'message' => 'ورود با موفقیت انجام شد.',
-                'data' => new UserResource($user),
-                'status' => Response::HTTP_OK
-            ], Response::HTTP_OK);
-
-        } else {
+        if (!$token = \auth()->guard('api')->attempt(['email' => $request->email, 'password' => $request->password])) {
             return response(['message' => 'اطلاعات صحیح نیست',
                     'data' => [],
                     'status' => Response::HTTP_UNAUTHORIZED]
                 , Response::HTTP_UNAUTHORIZED);
-        }
-
-        /*if (Auth::attempt($validateData)) {
-
-            auth()->user()->update([
-                'api_token' => Hash::make(Str::random(100)),
-            ]);
-
-            return response([
-                'message' => 'ورود با موفقیت انجام شد.',
-                'data' => new UserResource(auth()->user()),
-                'status' => Response::HTTP_OK
-            ], Response::HTTP_OK);
         } else {
             return response([
-                'message' => 'اطلاعات صحیح نیست',
-                'data' => [],
-                'status' => Response::HTTP_UNAUTHORIZED
-            ], Response::HTTP_UNAUTHORIZED);
-        }*/
+                'message' => 'ورود با موفقیت انجام شد.',
+                'data' => [
+                    'token' => $token,
+                    'token_type' => 'Bearer',
+                ],
+                'status' => Response::HTTP_OK
+            ], Response::HTTP_OK);
+        }
     }
 }
